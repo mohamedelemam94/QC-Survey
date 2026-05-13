@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="QC Survey"/>
+<title>QC Survey — FABMISR</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4ff;min-height:100vh;color:#0a1628}
+
+/* ══ LOGIN ══ */
+#screen-login{min-height:100vh;background:linear-gradient(160deg,#1e3a8a,#0a1628);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.login-card{background:#fff;border-radius:20px;padding:32px 24px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.3)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.login-logo-icon{width:44px;height:44px;background:#1e40af;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+.login-logo-text{font-size:1.3rem;font-weight:800;color:#0a1628}
+.login-logo-text span{color:#1e40af}
+.login-sub{font-size:.8rem;color:#9a9688;margin-bottom:24px}
+.login-label{display:block;font-size:.72rem;font-weight:700;color:#5a5850;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;margin-top:14px}
+.login-input{width:100%;padding:12px 14px;border:1.5px solid #d0cdc2;border-radius:10px;font-family:inherit;font-size:1rem;color:#0a1628;background:#fafaf8;outline:none;-webkit-appearance:none}
+.login-input:focus{border-color:#1e40af;background:#fff}
+.login-btn{width:100%;padding:14px;background:#1e40af;color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;margin-top:20px;-webkit-appearance:none}
+.login-btn:active{background:#1e3a8a}
+.load-survey-btn{width:100%;padding:12px;background:#f0f4ff;border:1.5px dashed #1e40af;border-radius:12px;font-family:inherit;font-size:.9rem;font-weight:600;color:#1e40af;cursor:pointer;margin-top:10px;text-align:center;-webkit-appearance:none}
+.survey-loaded-badge{display:none;background:#f0fdf4;border:1.5px solid #16a34a;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:.82rem;color:#16a34a;font-weight:600}
+.login-footer{margin-top:20px;text-align:center;font-size:.72rem;color:rgba(255,255,255,.4)}
+
+/* ══ SURVEY SCREEN ══ */
+#screen-survey{min-height:100vh;background:#f0f4ff;display:none;flex-direction:column}
+.survey-topbar{background:#1e40af;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.survey-topbar-left{display:flex;flex-direction:column}
+.survey-topbar-name{font-size:.75rem;color:rgba(255,255,255,.7);font-weight:500}
+.survey-topbar-title{font-size:.95rem;font-weight:700;color:#fff}
+.survey-exit-btn{padding:6px 14px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:inherit;font-size:.75rem;font-weight:600;cursor:pointer;-webkit-appearance:none}
+
+.survey-body{flex:1;padding:16px;max-width:680px;margin:0 auto;width:100%}
+.survey-header-card{background:#1e40af;border-radius:16px;padding:20px;margin-bottom:16px;color:#fff}
+.survey-header-title{font-size:1.2rem;font-weight:700;margin-bottom:4px}
+.survey-header-sub{font-size:.8rem;opacity:.8}
+
+/* Timer */
+.call-timer{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;margin-top:12px;width:fit-content}
+.call-timer-dot{width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pulse 1.5s infinite}
+.call-timer-text{font-size:.85rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Fields */
+.fields-card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.fields-title{font-size:.72rem;font-weight:800;color:#1e40af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.field-row{margin-bottom:10px}
+.field-label{font-size:.75rem;font-weight:700;color:#5a5850;margin-bottom:4px;display:block}
+.field-input{width:100%;padding:11px 13px;border:1.5px solid #d0cdc2;border-radius:9px;font-family:inherit;font-size:.95rem;color:#0a1628;background:#fafaf8;outline:none;-webkit-appearance:none}
+.field-input:focus{border-color:#1e40af;background:#fff}
+
+/* Questions */
+.q-card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.q-num{font-size:.68rem;font-weight:800;color:#1e40af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.q-text{font-size:.95rem;font-weight:600;color:#0a1628;margin-bottom:14px;line-height:1.5;direction:rtl;text-align:right}
+.q-text.latin{direction:ltr;text-align:left}
+.q-hint{font-size:.78rem;color:#9a9688;margin-bottom:10px;font-style:italic}
+
+/* Answer types */
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.choice-btn{padding:12px 10px;border:1.5px solid #d0cdc2;border-radius:10px;background:#fafaf8;font-family:inherit;font-size:.88rem;font-weight:500;color:#0a1628;cursor:pointer;text-align:center;transition:.15s;-webkit-appearance:none;word-break:break-word;direction:rtl}
+.choice-btn:active,.choice-btn.sel{border-color:#1e40af;background:#eff6ff;color:#1e40af;font-weight:700}
+
+.yn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.yn-btn{padding:16px;border:1.5px solid #d0cdc2;border-radius:12px;background:#fafaf8;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;text-align:center;-webkit-appearance:none}
+.yn-btn.yes.sel{border-color:#16a34a;background:#16a34a;color:#fff}
+.yn-btn.no.sel{border-color:#dc2626;background:#dc2626;color:#fff}
+
+.rating-row{display:flex;gap:8px;justify-content:center}
+.rat-btn{width:52px;height:52px;border:1.5px solid #d0cdc2;border-radius:10px;background:#fafaf8;font-family:inherit;font-size:1.1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-appearance:none}
+.rat-btn.sel{border-color:#1e40af;background:#1e40af;color:#fff}
+
+.nps-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.nps-btn{width:48px;height:48px;border:1.5px solid #d0cdc2;border-radius:9px;background:#fafaf8;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-appearance:none}
+.nps-btn.sel{border-color:#1e40af;background:#1e40af;color:#fff}
+.nps-labels{display:flex;justify-content:space-between;font-size:.68rem;color:#9a9688;margin-top:5px;padding:0 2px}
+
+.csat-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.csat-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 10px;border:1.5px solid #d0cdc2;border-radius:12px;background:#fafaf8;cursor:pointer;min-width:52px;-webkit-appearance:none}
+.csat-btn.sel{border-color:#1e40af;background:#eff6ff}
+.csat-e{font-size:1.6rem}
+.csat-l{font-size:.6rem;font-weight:700;color:#5a5850}
+
+.scale-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.scale-btn{width:46px;height:46px;border:1.5px solid #d0cdc2;border-radius:9px;background:#fafaf8;font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-appearance:none}
+.scale-btn.sel{border-color:#1e40af;background:#1e40af;color:#fff}
+
+.text-inp{width:100%;padding:12px 14px;border:1.5px solid #d0cdc2;border-radius:10px;font-family:inherit;font-size:.95rem;color:#0a1628;background:#fafaf8;outline:none;resize:vertical;min-height:80px;-webkit-appearance:none;direction:rtl}
+.text-inp:focus{border-color:#1e40af;background:#fff}
+
+.na-btn{margin-top:8px;padding:7px 16px;border:1.5px dashed #d0cdc2;border-radius:8px;background:transparent;color:#9a9688;font-family:inherit;font-size:.78rem;font-weight:700;cursor:pointer;-webkit-appearance:none}
+.na-btn.sel{border-color:#d97706;background:#d97706;color:#fff;border-style:solid}
+
+/* Matrix */
+.matrix-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.matrix-tbl{width:100%;border-collapse:collapse;font-size:.82rem}
+.matrix-tbl th{padding:8px 6px;text-align:center;font-weight:700;font-size:.72rem;color:#1e40af;border-bottom:2px solid #e2e8ff;background:#f0f4ff;white-space:nowrap}
+.matrix-tbl th:first-child{text-align:right;min-width:120px;max-width:180px}
+.matrix-tbl td{padding:8px 6px;border-bottom:1px solid #e2e8ff;vertical-align:middle}
+.matrix-tbl tr:last-child td{border-bottom:none}
+.m-label{font-size:.82rem;font-weight:600;color:#0a1628;text-align:right;direction:rtl;word-break:break-word}
+.m-radio{width:24px;height:24px;border-radius:50%;border:1.5px solid #d0cdc2;display:block;margin:0 auto;cursor:pointer;background:#fff;transition:.15s}
+.m-radio.sel{border-color:#1e40af;background:#1e40af}
+.m-na{font-size:.68rem;font-weight:700;color:#9a9688;border:1px dashed #d0cdc2;border-radius:5px;padding:3px 6px;cursor:pointer;background:transparent;font-family:inherit;white-space:nowrap;-webkit-appearance:none}
+.m-na.sel{border-color:#d97706;background:#d97706;color:#fff;border-style:solid}
+
+/* Section */
+.section-divider{padding:10px 0 4px;font-size:.7rem;font-weight:800;color:#1e40af;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #e2e8ff;margin-bottom:8px}
+
+/* Submit bar */
+.submit-bar{background:#fff;border-top:1px solid #e2e0d8;padding:14px 16px;position:sticky;bottom:0;display:flex;align-items:center;gap:10px}
+.progress-wrap{flex:1;background:#f0f0ee;border-radius:20px;height:8px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#1e40af,#60a5fa);border-radius:20px;transition:width .4s}
+.progress-text{font-size:.72rem;color:#5a5850;font-weight:600;white-space:nowrap}
+.submit-btn{padding:13px 24px;background:#1e40af;color:#fff;border:none;border-radius:11px;font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer;-webkit-appearance:none}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed}
+.submit-btn:active:not(:disabled){background:#1e3a8a}
+
+/* Thank you */
+#screen-thankyou{min-height:100vh;background:#f0f4ff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.ty-icon{font-size:4rem;margin-bottom:16px}
+.ty-title{font-size:1.8rem;font-weight:800;color:#0a1628;margin-bottom:8px}
+.ty-sub{font-size:.95rem;color:#5a5850;margin-bottom:24px}
+.ty-countdown{font-size:.85rem;color:#1e40af;font-weight:700;margin-bottom:20px}
+.ty-new-btn{padding:14px 32px;background:#1e40af;color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;-webkit-appearance:none}
+
+/* Export bar */
+.export-bar{background:#0a1628;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.export-bar-text{font-size:.78rem;color:rgba(255,255,255,.7)}
+.export-bar-text strong{color:#fff}
+.export-btn{padding:8px 16px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;-webkit-appearance:none}
+
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0a1628;color:#fff;padding:10px 20px;border-radius:20px;font-size:.82rem;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="screen-login">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">📋</div>
+      <div>
+        <div class="login-logo-text">QC<span>Survey</span></div>
+        <div style="font-size:.68rem;color:#9a9688">FABMISR — Branch QC</div>
+      </div>
+    </div>
+
+    <label class="login-label">Your Name</label>
+    <input class="login-input" id="loginName" placeholder="Enter your name..." autocomplete="off"/>
+
+    <label class="login-label">Branch</label>
+    <input class="login-input" id="loginBranch" placeholder="Enter branch name..." autocomplete="off"/>
+
+    <label class="login-label" style="margin-top:16px">Survey File</label>
+    <div id="surveyLoadedBadge" class="survey-loaded-badge">✅ <span id="surveyLoadedName">Survey loaded</span></div>
+    <button class="load-survey-btn" id="loadSurveyBtn" onclick="triggerLoadSurvey()">📂 Load Survey File (.json)</button>
+    <input type="file" id="surveyFileInput" accept=".json" style="display:none"/>
+
+    <button class="login-btn" onclick="doLogin()">Start Survey →</button>
+  </div>
+  <div class="login-footer">© 2026 Mohamed El-Emam · ClientPulse · Licensed to FABMISR</div>
+</div>
+
+<!-- ══ SURVEY ══ -->
+<div id="screen-survey">
+  <div class="survey-topbar">
+    <div class="survey-topbar-left">
+      <div class="survey-topbar-name" id="topbarName"></div>
+      <div class="survey-topbar-title" id="topbarTitle"></div>
+    </div>
+    <button class="survey-exit-btn" onclick="confirmExit()">Exit</button>
+  </div>
+
+  <div class="survey-body">
+    <div class="survey-header-card">
+      <div class="survey-header-title" id="surveyTitle"></div>
+      <div class="survey-header-sub" id="surveyDesc"></div>
+      <div class="call-timer">
+        <div class="call-timer-dot"></div>
+        <div class="call-timer-text" id="timerText">0:00</div>
+      </div>
+    </div>
+
+    <div class="fields-card" id="fieldsCard" style="display:none">
+      <div class="fields-title">📋 Customer Info</div>
+      <div id="fieldsContainer"></div>
+    </div>
+
+    <div id="questionsContainer"></div>
+  </div>
+
+  <div class="submit-bar">
+    <div class="progress-wrap"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <span class="progress-text" id="progressText">0 / 0</span>
+    <button class="submit-btn" id="submitBtn" onclick="submitSurvey()" disabled>Submit ✓</button>
+  </div>
+</div>
+
+<!-- ══ THANK YOU ══ -->
+<div id="screen-thankyou">
+  <div class="ty-icon">✅</div>
+  <div class="ty-title">Thank You!</div>
+  <div class="ty-sub">Response recorded successfully.</div>
+  <div class="ty-countdown" id="tyCountdown">Next survey in 5...</div>
+  <button class="ty-new-btn" onclick="startNewSurvey()">Start New Survey</button>
+  <div class="export-bar" style="position:fixed;bottom:0;left:0;right:0;border-radius:0">
+    <div class="export-bar-text">Responses: <strong id="responseCount">0</strong></div>
+    <button class="export-btn" onclick="exportResponses()">⬇ Export Results (JSON)</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ STATE ══════════════════════════════════════════════════════════════
+var currentSurvey  = null;
+var currentUser    = null;
+var currentBranch  = null;
+var answers        = {};
+var timerInterval  = null;
+var timerStart     = null;
+var responses      = [];
+var tyTimer        = null;
+
+// Load saved responses from localStorage
+try { responses = JSON.parse(localStorage.getItem('qc_responses'))||[]; } catch(e){ responses=[]; }
+
+// ══ UTILS ══════════════════════════════════════════════════════════════
+function esc(s){ return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''; }
+
+function toast(msg, type){
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = type==='err'?'#dc2626':'#0a1628';
+  el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, 2500);
+}
+
+function showScreen(id){
+  ['screen-login','screen-survey','screen-thankyou'].forEach(function(s){
+    document.getElementById(s).style.display='none';
+  });
+  document.getElementById(id).style.display = id==='screen-survey'?'flex':'flex';
+  document.getElementById(id).style.flexDirection = 'column';
+}
+
+// ══ SURVEY LOADING ═════════════════════════════════════════════════════
+function triggerLoadSurvey(){
+  var inp = document.getElementById('surveyFileInput');
+  inp.value = '';
+  inp.onchange = function(){
+    if(!this.files||!this.files.length) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try {
+        var data = JSON.parse(e.target.result);
+        // Handle both direct survey and export format
+        if(data.surveys && data.surveys.length) data = data.surveys[0];
+        if(!data.questions){ toast('Invalid survey file','err'); return; }
+        currentSurvey = data;
+        document.getElementById('surveyLoadedBadge').style.display='block';
+        document.getElementById('surveyLoadedName').textContent = data.name || 'Survey loaded';
+        document.getElementById('loadSurveyBtn').textContent = '✅ Survey loaded — tap to change';
+        toast('Survey loaded: '+data.name,'');
+      } catch(err){ toast('Could not read file','err'); }
+    };
+    reader.readAsText(this.files[0]);
+  };
+  inp.click();
+}
+
+// ══ LOGIN ══════════════════════════════════════════════════════════════
+function doLogin(){
+  var name   = document.getElementById('loginName').value.trim();
+  var branch = document.getElementById('loginBranch').value.trim();
+  if(!name){ toast('Please enter your name','err'); return; }
+  if(!branch){ toast('Please enter branch name','err'); return; }
+  if(!currentSurvey){ toast('Please load a survey file first','err'); return; }
+  currentUser   = name;
+  currentBranch = branch;
+  startSurvey();
+}
+
+// ══ SURVEY ═════════════════════════════════════════════════════════════
+function startSurvey(){
+  answers = {};
+  showScreen('screen-survey');
+  document.getElementById('topbarName').textContent = currentUser + ' · ' + currentBranch;
+  document.getElementById('topbarTitle').textContent = currentSurvey.name;
+  document.getElementById('surveyTitle').textContent = currentSurvey.name;
+  document.getElementById('surveyDesc').textContent  = currentSurvey.desc || '';
+  renderFields();
+  renderQuestions();
+  startTimer();
+  updateProgress();
+}
+
+function renderFields(){
+  var fields = currentSurvey.customFields || [];
+  var card = document.getElementById('fieldsCard');
+  var cont = document.getElementById('fieldsContainer');
+  if(!fields.length){ card.style.display='none'; return; }
+  card.style.display='block';
+  cont.innerHTML = fields.map(function(f){
+    return '<div class="field-row">'
+      +'<label class="field-label">'+esc(f.label)+(f.required?' *':'')+'</label>'
+      +'<input class="field-input" id="field-'+f.id+'" placeholder="'+esc(f.label)+'" oninput="updateProgress()"/>'
+      +'</div>';
+  }).join('');
+}
+
+function renderQuestions(){
+  var cont = document.getElementById('questionsContainer');
+  var questions = getVisibleQuestions();
+  var qn = 0;
+  cont.innerHTML = questions.map(function(q){
+    if(q.type==='section') return '<div class="section-divider">'+esc(q.text)+'</div>';
+    qn++;
+    var cur = answers[q.id];
+    var isLatin = /^[a-zA-Z0-9\s\?\!\.\,]+$/.test(q.text);
+    return '<div class="q-card" id="qcard-'+q.id+'">'
+      +'<div class="q-num">Question '+qn+(q.required?' · Required':'')+' </div>'
+      +'<div class="q-text'+(isLatin?' latin':'')+'">'+esc(q.text)+'</div>'
+      +(q.hint?'<div class="q-hint">'+esc(q.hint)+'</div>':'')
+      +renderAnswerUI(q, cur, qn)
+      +'</div>';
+  }).join('');
+  bindEvents();
+}
+
+function getVisibleQuestions(){
+  if(!currentSurvey) return [];
+  return (currentSurvey.questions||[]).filter(function(q){
+    if(!q.showIf || !q.showIf.questionId) return true;
+    var depAns = answers[q.showIf.questionId];
+    if(Array.isArray(depAns)) return depAns.indexOf(q.showIf.value)>=0;
+    return depAns === q.showIf.value;
+  });
+}
+
+function renderAnswerUI(q, cur, qn){
+  var dis = cur==='N/A' ? ' style="opacity:.4;pointer-events:none"' : '';
+  var naBtn = '<div style="margin-top:8px"><button class="na-btn'+(cur==='N/A'?' sel':'')+'" data-qid="'+q.id+'" data-kna="1">'+(cur==='N/A'?'✓ N/A — Not applicable':'N/A — Not applicable')+'</button></div>';
+
+  if(q.type==='text'){
+    return '<textarea class="text-inp qta" data-qid="'+q.id+'" placeholder="'+(q.hint||'Your answer...')+'">'+(cur||'')+'</textarea>';
+  }
+  if(q.type==='yesno'){
+    return '<div class="yn-row"'+dis+'>'
+      +'<button class="yn-btn yes'+(cur==='Yes'?' sel':'')+'" data-qid="'+q.id+'" data-val="Yes">👍 Yes</button>'
+      +'<button class="yn-btn no'+(cur==='No'?' sel':'')+'" data-qid="'+q.id+'" data-val="No">👎 No</button>'
+      +'</div>'+naBtn;
+  }
+  if(q.type==='choice'||q.type==='dropdown'){
+    var choices = q.choices||[];
+    return '<div class="choice-grid">'
+      +choices.map(function(ch){
+        var isSel = Array.isArray(cur)?cur.indexOf(ch)>=0:cur===ch;
+        return '<button class="choice-btn'+(isSel?' sel':'')+'" data-qid="'+q.id+'" data-val="'+esc(ch)+'" data-multi="'+(q.allowMultiple?'1':'0')+'">'+esc(ch)+'</button>';
+      }).join('')+'</div>'+naBtn;
+  }
+  if(q.type==='rating'){
+    return '<div class="rating-row"'+dis+'>'
+      +[1,2,3,4,5].map(function(n){
+        return '<button class="rat-btn'+(cur==n?' sel':'')+'" data-qid="'+q.id+'" data-val="'+n+'">'+n+'</button>';
+      }).join('')+'</div>'+naBtn;
+  }
+  if(q.type==='nps'){
+    var html='<div class="nps-row"'+dis+'>';
+    for(var i=0;i<=10;i++) html+='<button class="nps-btn'+(cur==i?' sel':'')+'" data-qid="'+q.id+'" data-val="'+i+'">'+i+'</button>';
+    html+='</div><div class="nps-labels"><span>Not likely</span><span>Extremely likely</span></div>'+naBtn;
+    return html;
+  }
+  if(q.type==='csat'){
+    var ops=[{v:'a',e:'😡',l:'Very Bad'},{v:'b',e:'😞',l:'Bad'},{v:'c',e:'😐',l:'Neutral'},{v:'d',e:'🙂',l:'Good'},{v:'e',e:'😍',l:'Excellent'}];
+    return '<div class="csat-row"'+dis+'>'
+      +ops.map(function(o){
+        return '<button class="csat-btn'+(cur===o.v?' sel':'')+'" data-qid="'+q.id+'" data-val="'+o.v+'">'
+          +'<span class="csat-e">'+o.e+'</span>'
+          +'<span class="csat-l">'+o.l+'</span></button>';
+      }).join('')+'</div>'+naBtn;
+  }
+  if(q.type==='scale'){
+    var html='<div class="scale-row"'+dis+'>';
+    for(var i=1;i<=10;i++) html+='<button class="scale-btn'+(cur==i?' sel':'')+'" data-qid="'+q.id+'" data-val="'+i+'">'+i+'</button>';
+    html+='</div>'+naBtn;
+    return html;
+  }
+  if(q.type==='matrix'){
+    var mR=q.matrixRows||[], mC=q.matrixCols||['1','2','3','4','5'], mCur=cur||{};
+    var html='<div class="matrix-wrap"><table class="matrix-tbl"><thead><tr><th></th>';
+    mC.forEach(function(col){html+='<th>'+esc(col)+'</th>';});
+    html+='<th style="color:#d97706">N/A</th></tr></thead><tbody>';
+    mR.forEach(function(row,ri){
+      var rk='row_'+ri, rv=mCur[rk]||'';
+      html+='<tr><td class="m-label">'+esc(row)+'</td>';
+      mC.forEach(function(col){
+        html+='<td><span class="m-radio'+(rv===col?' sel':'')+'" data-qid="'+esc(q.id)+'" data-rk="'+rk+'" data-val="'+esc(col)+'"></span></td>';
+      });
+      html+='<td><button class="m-na'+(rv==='N/A'?' sel':'')+'" data-qid="'+esc(q.id)+'" data-rk="'+rk+'">N/A</button></td>';
+      html+='</tr>';
+    });
+    html+='</tbody></table></div>';
+    return html;
+  }
+  return '';
+}
+
+function bindEvents(){
+  // Choice buttons
+  document.querySelectorAll('.choice-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var qid=this.dataset.qid, val=this.dataset.val, multi=this.dataset.multi==='1';
+      if(multi){ var cur=answers[qid]||[]; if(!Array.isArray(cur))cur=[]; var i=cur.indexOf(val); if(i>=0)cur.splice(i,1);else cur.push(val); answers[qid]=cur; }
+      else { answers[qid]=val; }
+      renderQuestions(); updateProgress();
+    });
+  });
+  // Single value buttons
+  document.querySelectorAll('.rat-btn,.nps-btn,.scale-btn,.csat-btn,.yn-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      answers[this.dataset.qid]=this.dataset.val;
+      renderQuestions(); updateProgress();
+    });
+  });
+  // N/A
+  document.querySelectorAll('[data-kna]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var qid=this.dataset.qid;
+      answers[qid]=answers[qid]==='N/A'?undefined:'N/A';
+      renderQuestions(); updateProgress();
+    });
+  });
+  // Matrix radio
+  document.querySelectorAll('.m-radio').forEach(function(el){
+    el.addEventListener('click',function(){
+      var qid=this.dataset.qid,rk=this.dataset.rk,val=this.dataset.val;
+      if(!answers[qid])answers[qid]={};
+      answers[qid][rk]=val;
+      renderQuestions(); updateProgress();
+    });
+  });
+  // Matrix N/A
+  document.querySelectorAll('.m-na').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var qid=this.dataset.qid,rk=this.dataset.rk;
+      if(!answers[qid])answers[qid]={};
+      answers[qid][rk]=answers[qid][rk]==='N/A'?'':'N/A';
+      renderQuestions(); updateProgress();
+    });
+  });
+  // Text areas
+  document.querySelectorAll('.qta').forEach(function(ta){
+    ta.addEventListener('input',function(){ answers[this.dataset.qid]=this.value; updateProgress(); });
+  });
+}
+
+function updateProgress(){
+  var qs = getVisibleQuestions().filter(function(q){return q.required&&q.type!=='section';});
+  var done = qs.filter(function(q){
+    var v=answers[q.id];
+    if(v==='N/A') return true;
+    if(q.type==='matrix'){
+      var rows=q.matrixRows||[];
+      return rows.every(function(_,ri){return (v||{})['row_'+ri];});
+    }
+    return v!==undefined&&v!==''&&!(Array.isArray(v)&&v.length===0);
+  });
+  // Also check required fields
+  var fields = currentSurvey.customFields||[];
+  var fieldsDone = fields.filter(function(f){
+    if(!f.required) return true;
+    var el=document.getElementById('field-'+f.id);
+    return el&&el.value.trim();
+  });
+  var allDone = done.length>=qs.length && fieldsDone.length>=fields.filter(function(f){return f.required;}).length;
+  var pct = qs.length>0?Math.round(done.length/qs.length*100):100;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressText').textContent=done.length+' / '+qs.length;
+  document.getElementById('submitBtn').disabled=!allDone;
+}
+
+// ══ TIMER ══════════════════════════════════════════════════════════════
+function startTimer(){
+  if(timerInterval) clearInterval(timerInterval);
+  timerStart = Date.now();
+  timerInterval = setInterval(function(){
+    var s = Math.floor((Date.now()-timerStart)/1000);
+    var m = Math.floor(s/60);
+    var sec = s%60;
+    document.getElementById('timerText').textContent = m+':'+(sec<10?'0':'')+sec;
+  },1000);
+}
+
+function stopTimer(){
+  if(timerInterval) clearInterval(timerInterval);
+  return Math.floor((Date.now()-timerStart)/1000);
+}
+
+// ══ SUBMIT ═════════════════════════════════════════════════════════════
+function submitSurvey(){
+  var duration = stopTimer();
+  var visible  = getVisibleQuestions().filter(function(q){return q.type!=='section';});
+  
+  // Collect fields
+  var fields = {};
+  (currentSurvey.customFields||[]).forEach(function(f){
+    var el=document.getElementById('field-'+f.id);
+    if(el) fields[f.id]=el.value.trim();
+  });
+
+  var rec = {
+    responseId:  'R_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    surveyId:    currentSurvey.id,
+    surveyName:  currentSurvey.name,
+    agentName:   currentUser,
+    branch:      currentBranch,
+    submittedAt: new Date().toISOString(),
+    callDuration:duration,
+    fields:      fields,
+    answers:     visible.map(function(q){ return {questionId:q.id,answer:answers[q.id]||''}; }),
+  };
+
+  responses.push(rec);
+  try{ localStorage.setItem('qc_responses',JSON.stringify(responses)); }catch(e){}
+
+  document.getElementById('responseCount').textContent = responses.length;
+  showScreen('screen-thankyou');
+  startCountdown();
+}
+
+function startCountdown(){
+  var n=5;
+  if(tyTimer) clearInterval(tyTimer);
+  document.getElementById('tyCountdown').textContent='Next survey in '+n+'...';
+  tyTimer=setInterval(function(){
+    n--;
+    if(n<=0){ clearInterval(tyTimer); startNewSurvey(); }
+    else document.getElementById('tyCountdown').textContent='Next survey in '+n+'...';
+  },1000);
+}
+
+function startNewSurvey(){
+  if(tyTimer) clearInterval(tyTimer);
+  answers={};
+  startSurvey();
+}
+
+// ══ EXIT ═══════════════════════════════════════════════════════════════
+function confirmExit(){
+  if(window.confirm('Exit survey?\n\nProgress will be lost.')){
+    if(tyTimer) clearInterval(tyTimer);
+    stopTimer();
+    answers={};
+    showScreen('screen-login');
+  }
+}
+
+// ══ EXPORT ═════════════════════════════════════════════════════════════
+function exportResponses(){
+  if(!responses.length){ toast('No responses yet','err'); return; }
+  var payload={
+    exportedAt:new Date().toISOString(),
+    exportedBy:currentUser||'QC',
+    version:'1.0',
+    surveys:[currentSurvey],
+    responses:responses,
+  };
+  var json=JSON.stringify(payload,null,2);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='QC_Results_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},300);
+  toast(responses.length+' responses exported!','');
+}
+</script>
+</body>
+</html>
